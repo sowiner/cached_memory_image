@@ -6,11 +6,11 @@ import 'package:cached_memory_image/cached_image_base64_manager.dart';
 import 'package:cached_memory_image/cached_image_manager.dart';
 import 'package:flutter/material.dart';
 
+export 'cached_image.dart';
+export 'cached_image_base64_manager.dart';
+export 'cached_image_manager.dart';
 export 'provider/cached_memory_image_placeholder_provider.dart';
 export 'provider/cached_memory_image_provider.dart';
-export 'cached_image.dart';
-export 'cached_image_manager.dart';
-export 'cached_image_base64_manager.dart';
 
 class CachedMemoryImage extends StatefulWidget {
   /// Example
@@ -43,6 +43,7 @@ class CachedMemoryImage extends StatefulWidget {
   final int? cacheWidth;
   final int? cacheHeight;
   final CachedImage cached;
+  final String? fileExtension;
 
   final FilterQuality filterQuality;
 
@@ -74,6 +75,7 @@ class CachedMemoryImage extends StatefulWidget {
     this.cacheWidth,
     this.cacheHeight,
     this.cached = CachedImage.cacheAndRead,
+    this.fileExtension,
   }) : super(key: key);
 
   @override
@@ -92,7 +94,7 @@ class _CachedMemoryImageState extends State<CachedMemoryImage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<File?>(
-      future: _cachedImage(),
+      future: _cachedImage(fileExtension: widget.fileExtension ?? 'jpg'),
       builder: (context, snapshot) {
         final file = snapshot.data;
         if (snapshot.hasData && file != null) {
@@ -126,8 +128,7 @@ class _CachedMemoryImageState extends State<CachedMemoryImage> {
     );
   }
 
-  Widget _errorBuilder(
-      BuildContext context, Object error, StackTrace? stackTrace) {
+  Widget _errorBuilder(BuildContext context, Object error, StackTrace? stackTrace) {
     // Remove invalid file from cache and display error widget.
     return FutureBuilder<bool>(
       future: _cachedImageManager?.removeFile(widget.uniqueKey),
@@ -144,17 +145,19 @@ class _CachedMemoryImageState extends State<CachedMemoryImage> {
     );
   }
 
-  Future<File?> _cachedImage() async {
+  Future<File?> _cachedImage({String fileExtension = 'jpg'}) async {
     if (widget.cached == CachedImage.cacheAndRead) {
       if (widget.base64 != null) {
         return _cachedImageManager?.cacheBase64(
           widget.uniqueKey,
           widget.base64!,
+          fileExtension: fileExtension,
         );
       } else if (widget.bytes != null) {
         return _cachedImageManager?.cacheBytes(
           widget.uniqueKey,
           widget.bytes!,
+          fileExtension: fileExtension,
         );
       }
     } else if (widget.cached == CachedImage.readOnly) {
